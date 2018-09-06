@@ -278,14 +278,15 @@ class QDRankingModel(object):
                          self.q_length: batch['query_length'],
                          self.labels: batch['label'],
                          self.dropout_keep_prob: 1.0}
-            preds, loss = self.sess.run([self.prediction, self.loss], feed_dict)
-            preds = tf.argmax(preds, 1)
+            pred_probs, loss = self.sess.run([self.prediction, self.loss], feed_dict)
+            pred_labels = tf.argmax(pred_probs, 1)
 
-            acc_num += tf.reduce_sum(tf.cast(tf.equal(preds, self.labels), tf.float32))
+            acc_num += tf.reduce_sum(tf.cast(tf.equal(pred_labels, self.labels), tf.float32))
             total_loss += loss * len(batch['raw_data'])
             total_num += len(batch['raw_data'])
 
-            for sample, pred_label in zip(batch['raw_data'], preds):
+            for sample, pred_prob, pred_label in zip(batch['raw_data'], pred_probs, pred_labels):
+                sample['pred_score'] = pred_prob[1]
                 sample['pred_label'] = pred_label
                 pred_samples.append(sample)
 
